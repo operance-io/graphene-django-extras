@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import inspect
 import re
 from collections import OrderedDict
@@ -8,7 +7,14 @@ from django import VERSION as DJANGO_VERSION
 from django.apps import apps
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRel
 from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.db.models import NOT_PROVIDED, Manager, ManyToManyRel, ManyToOneRel, Model, QuerySet
+from django.db.models import (
+    NOT_PROVIDED,
+    Manager,
+    ManyToManyRel,
+    ManyToOneRel,
+    Model,
+    QuerySet,
+)
 from django.db.models.base import ModelBase
 from graphene.utils.str_converters import to_snake_case
 from graphene_django.utils import is_valid_django_model
@@ -23,10 +29,10 @@ def get_reverse_fields(model):
 
     for name, field in reverse_fields.items():
         # Django =>1.9 uses 'rel', django <1.9 uses 'related'
-        related = getattr(field, "rel", None) or getattr(field, "related", None)
-        if isinstance(related, ManyToOneRel):
-            yield (name, related)
-        elif isinstance(related, ManyToManyRel) and not related.symmetrical:
+        related = getattr(field, 'rel', None) or getattr(field, 'related', None)
+        if isinstance(related, ManyToOneRel) or (
+            isinstance(related, ManyToManyRel) and not related.symmetrical
+        ):
             yield (name, related)
 
 
@@ -42,21 +48,21 @@ def _resolve_model(obj):
     String representations should have the format:
         'appname.ModelName'
     """
-    if isinstance(obj, six.string_types) and len(obj.split(".")) == 2:
-        app_name, model_name = obj.split(".")
+    if isinstance(obj, six.string_types) and len(obj.split('.')) == 2:
+        app_name, model_name = obj.split('.')
         resolved_model = apps.get_model(app_name, model_name)
         if resolved_model is None:
-            msg = "Django did not return a model for {0}.{1}"
+            msg = 'Django did not return a model for {0}.{1}'
             raise ImproperlyConfigured(msg.format(app_name, model_name))
         return resolved_model
-    elif inspect.isclass(obj) and issubclass(obj, Model):
+    if inspect.isclass(obj) and issubclass(obj, Model):
         return obj
-    raise ValueError("{0} is not a Django model".format(obj))
+    raise ValueError(f'{obj} is not a Django model')
 
 
 def to_kebab_case(name):
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1-\2", name.title().replace(" ", ""))
-    return re.sub("([a-z0-9])([A-Z])", r"\1-\2", s1).lower()
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', name.title().replace(' ', ''))
+    return re.sub('([a-z0-9])([A-Z])', r'\1-\2', s1).lower()
 
 
 def get_related_model(field):
@@ -85,11 +91,11 @@ def get_model_fields(model):
     reverse_fields = list(get_reverse_fields(model))
     exclude_fields = [field[1] for field in reverse_fields]
 
-    local_fields = [(field.name, field) for field in all_fields_list if field not in exclude_fields]
+    local_fields = [
+        (field.name, field) for field in all_fields_list if field not in exclude_fields
+    ]
 
-    all_fields = local_fields + reverse_fields
-
-    return all_fields
+    return local_fields + reverse_fields
 
 
 def get_obj(app_label, model_name, object_id):
@@ -101,13 +107,11 @@ def get_obj(app_label, model_name, object_id):
     :return: instance
     """
     try:
-        model = apps.get_model("{}.{}".format(app_label, model_name))
-        assert is_valid_django_model(model), ("Model {}.{} do not exist.").format(
-            app_label, model_name
-        )
+        model = apps.get_model(f'{app_label}.{model_name}')
+        if not is_valid_django_model(model):
+            raise ValueError(f'Model {app_label}.{model_name} do not exist.')  # noqa: TRY301
 
-        obj = get_Object_or_None(model, pk=object_id)
-        return obj
+        return get_Object_or_None(model, pk=object_id)
 
     except model.DoesNotExist:
         return None
@@ -135,17 +139,17 @@ def create_obj(django_model, new_obj_key=None, *args, **kwargs):
     try:
         if isinstance(django_model, six.string_types):
             django_model = apps.get_model(django_model)
-        assert is_valid_django_model(django_model), (
-            "You need to pass a valid Django Model or a string with format: "
-            '<app_label>.<model_name> to "create_obj"'
-            ' function, received "{}".'
-        ).format(django_model)
+        if not is_valid_django_model(django_model):
+            raise ValueError(  # noqa: TRY301
+                'You need to pass a valid Django Model or a string with format: '
+                '<app_label>.<model_name> to "create_obj"'
+                f' function, received "{django_model}".'
+            )
 
-        data = kwargs.get(new_obj_key, None) if new_obj_key else kwargs
+        data = kwargs.get(new_obj_key) if new_obj_key else kwargs
         new_obj = django_model(**data)
         new_obj.full_clean()
         new_obj.save()
-        return new_obj
     except LookupError:
         pass
     except ValidationError as e:
@@ -154,6 +158,8 @@ def create_obj(django_model, new_obj_key=None, *args, **kwargs):
         raise TypeError(e.__str__())
     except Exception as e:
         return e.__str__()
+
+    return new_obj
 
 
 def clean_dict(d):
@@ -165,7 +171,9 @@ def clean_dict(d):
         return d
     if isinstance(d, list):
         return [v for v in (clean_dict(v) for v in d) if v]
-    return OrderedDict([(k, v) for k, v in ((k, clean_dict(v)) for k, v in list(d.items())) if v])
+    return OrderedDict(
+        [(k, v) for k, v in ((k, clean_dict(v)) for k, v in list(d.items())) if v]
+    )
 
 
 def get_type(_type):
@@ -190,19 +198,19 @@ def get_fields(info):
 
 def is_required(field):
     try:
-        blank = getattr(field, "blank", getattr(field, "field", None))
-        default = getattr(field, "default", getattr(field, "field", None))
+        blank = getattr(field, 'blank', getattr(field, 'field', None))
+        default = getattr(field, 'default', getattr(field, 'field', None))
         #  null = getattr(field, "null", getattr(field, "field", None))
 
         if blank is None:
             blank = True
         elif not isinstance(blank, bool):
-            blank = getattr(blank, "blank", True)
+            blank = getattr(blank, 'blank', True)
 
         if default is None:
             default = NOT_PROVIDED
         elif default != NOT_PROVIDED:
-            default = getattr(default, "default", default)
+            default = getattr(default, 'default', default)
 
     except AttributeError:
         return False
@@ -219,7 +227,7 @@ def _get_queryset(klass):
     """
     if isinstance(klass, QuerySet):
         return klass
-    elif isinstance(klass, Manager):
+    if isinstance(klass, Manager):
         manager = klass
     elif isinstance(klass, ModelBase):
         manager = klass._default_manager
@@ -229,8 +237,8 @@ def _get_queryset(klass):
         else:
             klass__name = klass.__class__.__name__
         raise ValueError(
-            "Object is of type '{}', but must be a Django Model, "
-            "Manager, or QuerySet".format(klass__name)
+            f"Object is of type '{klass__name}', but must be a Django Model, "
+            'Manager, or QuerySet'
         )
     return manager.all()
 
@@ -242,7 +250,7 @@ def _get_custom_resolver(info):
     This resolver must return QuerySet instance to be successfully resolved.
     """
     parent = info.parent_type
-    custom_resolver_name = f"resolve_{to_snake_case(info.field_name)}"
+    custom_resolver_name = f'resolve_{to_snake_case(info.field_name)}'
     if hasattr(parent.graphene_type, custom_resolver_name):
         return getattr(parent.graphene_type, custom_resolver_name)
     return None
@@ -263,8 +271,7 @@ def get_Object_or_None(klass, *args, **kwargs):
     try:
         if args:
             return queryset.using(args[0]).get(**kwargs)
-        else:
-            return queryset.get(*args, **kwargs)
+        return queryset.get(*args, **kwargs)
     except queryset.model.DoesNotExist:
         return None
     # except queryset.model.MultipleObjectsReturned:
@@ -289,7 +296,9 @@ def get_related_fields(model):
 
 
 def find_field(field, fields_dict):
-    temp = fields_dict.get(field.name.value, fields_dict.get(to_snake_case(field.name.value), None))
+    temp = fields_dict.get(
+        field.name.value, fields_dict.get(to_snake_case(field.name.value), None)
+    )
 
     return temp
 
@@ -332,7 +341,7 @@ def recursive_params(
                 prefetch_related.append(temp.name)
             else:
                 select_related.append(temp.name)
-        elif getattr(field, "selection_set", None):
+        elif getattr(field, 'selection_set', None):
             a, b = recursive_params(
                 field.selection_set,
                 fragments,
@@ -351,8 +360,8 @@ def queryset_factory(manager, root, info, **kwargs):
     prefetch_related = set()
     available_related_fields = get_related_fields(manager.model)
 
-    for f in kwargs.keys():
-        temp = available_related_fields.get(f.split("__", 1)[0], None)
+    for f in kwargs:
+        temp = available_related_fields.get(f.split('__', 1)[0], None)
         if temp:
             if temp.many_to_many or temp.one_to_many:
                 prefetch_related.add(temp.name)
@@ -380,9 +389,9 @@ def queryset_factory(manager, root, info, **kwargs):
         return _get_queryset(
             manager.select_related(*select_related).prefetch_related(*prefetch_related)
         )
-    elif not select_related and prefetch_related:
+    if not select_related and prefetch_related:
         return _get_queryset(manager.prefetch_related(*prefetch_related))
-    elif select_related and not prefetch_related:
+    if select_related and not prefetch_related:
         return _get_queryset(manager.select_related(*select_related))
     return _get_queryset(manager)
 
@@ -391,6 +400,6 @@ def parse_validation_exc(validation_exc):
     errors_list = []
     for key, value in validation_exc.error_dict.items():
         for exc in value:
-            errors_list.append({"field": key, "messages": exc.messages})
+            errors_list.append({'field': key, 'messages': exc.messages})
 
     return errors_list

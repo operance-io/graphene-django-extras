@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 from graphene.utils.str_converters import to_camel_case
 
 
-class Registry(object):
+class Registry:
     """
     Custom registry implementation for use on DjangoObjectType and DjangoInputObjectType
     """
@@ -27,16 +26,18 @@ class Registry(object):
     def register(self, cls, for_input=None):
         from .types import DjangoInputObjectType, DjangoObjectType
 
-        assert issubclass(cls, (DjangoInputObjectType, DjangoObjectType)), (
-            "Only DjangoInputObjectType or DjangoObjectType can be"
-            ' registered, received "{}"'.format(cls.__name__)
-        )
+        if not issubclass(cls, (DjangoInputObjectType, DjangoObjectType)):
+            raise TypeError(
+                'Only DjangoInputObjectType or DjangoObjectType can be'
+                f' registered, received "{cls.__name__}"'
+            )
 
-        assert cls._meta.registry == self, "Registry for a Model have to match."
+        if cls._meta.registry != self:
+            raise ValueError('Registry for a Model have to match.')
 
-        if not getattr(cls._meta, "skip_registry", False):
+        if not getattr(cls._meta, 'skip_registry', False):
             key = (
-                "{}_{}".format(cls._meta.model.__name__.lower(), for_input)
+                f'{cls._meta.model.__name__.lower()}_{for_input}'
                 if for_input
                 else cls._meta.model.__name__.lower()
             )
@@ -44,7 +45,7 @@ class Registry(object):
 
     def get_type_for_model(self, model, for_input=None):
         key = (
-            "{}_{}".format(model.__name__.lower(), for_input)
+            f'{model.__name__.lower()}_{for_input}'
             if for_input
             else model.__name__.lower()
         )
@@ -55,12 +56,12 @@ registry = None
 
 
 def get_global_registry():
-    global registry
+    global registry  # noqa: PLW0603
     if not registry:
         registry = Registry()
     return registry
 
 
 def reset_global_registry():
-    global registry
+    global registry  # noqa: PLW0603
     registry = None

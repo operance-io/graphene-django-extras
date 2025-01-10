@@ -1,5 +1,8 @@
-# -*- coding: utf-8 -*-
-from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS, BaseFilterSet, FilterSet
+from django_filters.filterset import (
+    FILTER_FOR_DBFIELD_DEFAULTS,
+    BaseFilterSet,
+    FilterSet,
+)
 from graphene_django.filter.utils import replace_csv_filters
 
 
@@ -26,7 +29,7 @@ class GrapheneFilterSetMixin(BaseFilterSet):
 def setup_filterset(filterset_class):
     """Wrap a provided filterset in Graphene-specific functionality"""
     return type(
-        "Graphene{}".format(filterset_class.__name__),
+        f'Graphene{filterset_class.__name__}',
         (filterset_class, GrapheneFilterSetMixin),
         {},
     )
@@ -36,11 +39,10 @@ def custom_filterset_factory(model, filterset_base_class=FilterSet, **meta):
     """
     Create a filterset for the given model using the provided meta data
     """
-    meta.update({"model": model, "exclude": []})
-    meta_class = type(str("Meta"), (object,), meta)
-    filterset = type(
-        str("%sFilterSet" % model._meta.object_name),
+    meta.update({'model': model, 'exclude': []})
+    meta_class = type('Meta', (object,), meta)
+    return type(
+        f'{model._meta.object_name}FilterSet',
         (filterset_base_class, GrapheneFilterSetMixin),
-        {"Meta": meta_class},
+        {'Meta': meta_class},
     )
-    return filterset

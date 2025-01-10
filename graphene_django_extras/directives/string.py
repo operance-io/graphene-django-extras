@@ -1,29 +1,28 @@
-# -*- coding: utf-8 -*-
 import base64
 
 import six
 from graphene.utils.str_converters import to_camel_case, to_snake_case
 from graphql import GraphQLArgument, GraphQLInt, GraphQLNonNull, GraphQLString
 
-from ..utils import to_kebab_case
+from ..utils import to_kebab_case  # noqa: TID252
 from .base import BaseExtraGraphQLDirective
 
 __all__ = (
-    "DefaultGraphQLDirective",
-    "Base64GraphQLDirective",
-    "NumberGraphQLDirective",
-    "CurrencyGraphQLDirective",
-    "LowercaseGraphQLDirective",
-    "UppercaseGraphQLDirective",
-    "CapitalizeGraphQLDirective",
-    "CamelCaseGraphQLDirective",
-    "SnakeCaseGraphQLDirective",
-    "KebabCaseGraphQLDirective",
-    "SwapCaseGraphQLDirective",
-    "StripGraphQLDirective",
-    "TitleCaseGraphQLDirective",
-    "CenterGraphQLDirective",
-    "ReplaceGraphQLDirective",
+    'Base64GraphQLDirective',
+    'CamelCaseGraphQLDirective',
+    'CapitalizeGraphQLDirective',
+    'CenterGraphQLDirective',
+    'CurrencyGraphQLDirective',
+    'DefaultGraphQLDirective',
+    'KebabCaseGraphQLDirective',
+    'LowercaseGraphQLDirective',
+    'NumberGraphQLDirective',
+    'ReplaceGraphQLDirective',
+    'SnakeCaseGraphQLDirective',
+    'StripGraphQLDirective',
+    'SwapCaseGraphQLDirective',
+    'TitleCaseGraphQLDirective',
+    'UppercaseGraphQLDirective',
 )
 
 
@@ -35,13 +34,17 @@ class DefaultGraphQLDirective(BaseExtraGraphQLDirective):
     @staticmethod
     def get_args():
         return {
-            "to": GraphQLArgument(GraphQLNonNull(GraphQLString), description="Value to default to")
+            'to': GraphQLArgument(
+                GraphQLNonNull(GraphQLString), description='Value to default to'
+            )
         }
 
     @staticmethod
     def resolve(value, directive, root, info, **kwargs):
         if not value:
-            to_argument = [arg for arg in directive.arguments if arg.name.value == "to"][0]
+            to_argument = next(
+                arg for arg in directive.arguments if arg.name.value == 'to'
+            )
             return to_argument.value.value
 
         return value
@@ -51,7 +54,7 @@ class Base64GraphQLDirective(BaseExtraGraphQLDirective):
     @staticmethod
     def get_args():
         return {
-            "op": GraphQLArgument(
+            'op': GraphQLArgument(
                 GraphQLString, description='Action to perform: "encode" or "decode"'
             )
         }
@@ -61,15 +64,15 @@ class Base64GraphQLDirective(BaseExtraGraphQLDirective):
         if not value:
             return None
 
-        op_argument = [arg for arg in directive.arguments if arg.name.value == "op"]
-        op_argument = op_argument[0] if len(op_argument) > 0 else "encode"
+        op_argument = [arg for arg in directive.arguments if arg.name.value == 'op']
+        op_argument = op_argument[0] if len(op_argument) > 0 else 'encode'
 
-        if op_argument in ("decode", "encode"):
-            if op_argument == "decode":
-                value = base64.urlsafe_b64decode(str(value).encode("ascii"))
-            if op_argument == "encode":
-                value = base64.urlsafe_b64encode(str(value).encode("ascii"))
-            value = value.decode("ascii") if six.PY3 else value
+        if op_argument in ('decode', 'encode'):
+            if op_argument == 'decode':
+                value = base64.urlsafe_b64decode(str(value).encode('ascii'))
+            if op_argument == 'encode':
+                value = base64.urlsafe_b64encode(str(value).encode('ascii'))
+            value = value.decode('ascii') if six.PY3 else value
 
         return value
 
@@ -82,12 +85,14 @@ class NumberGraphQLDirective(BaseExtraGraphQLDirective):
     @staticmethod
     def get_args():
         return {
-            "as": GraphQLArgument(GraphQLNonNull(GraphQLString), description="Value to default to")
+            'as': GraphQLArgument(
+                GraphQLNonNull(GraphQLString), description='Value to default to'
+            )
         }
 
     @staticmethod
     def resolve(value, directive, root, info, **kwargs):
-        as_argument = [arg for arg in directive.arguments if arg.name.value == "as"][0]
+        as_argument = next(arg for arg in directive.arguments if arg.name.value == 'as')
         return format(float(value or 0), as_argument.value.value)
 
 
@@ -95,17 +100,19 @@ class CurrencyGraphQLDirective(BaseExtraGraphQLDirective):
     @staticmethod
     def get_args():
         return {
-            "symbol": GraphQLArgument(GraphQLString, description="Currency symbol (default: $)")
+            'symbol': GraphQLArgument(
+                GraphQLString, description='Currency symbol (default: $)'
+            )
         }
 
     @staticmethod
     def resolve(value, directive, root, info, **kwargs):
         symbol_argument = next(
-            (arg for arg in directive.arguments if arg.name.value == "symbol"), None
+            (arg for arg in directive.arguments if arg.name.value == 'symbol'), None
         )
-        symbol = symbol_argument.value.value if symbol_argument else "$"
+        symbol = symbol_argument.value.value if symbol_argument else '$'
         # '${:,.2f}'.format(1234.5)
-        return symbol + format(float(value or 0), ",.2f")
+        return symbol + format(float(value or 0), ',.2f')
 
 
 class LowercaseGraphQLDirective(BaseExtraGraphQLDirective):
@@ -160,7 +167,7 @@ class SnakeCaseGraphQLDirective(BaseExtraGraphQLDirective):
     @staticmethod
     def resolve(value, directive, root, info, **kwargs):
         value = value if isinstance(value, six.string_types) else str(value)
-        return to_snake_case(value.title().replace(" ", ""))
+        return to_snake_case(value.title().replace(' ', ''))
 
 
 class KebabCaseGraphQLDirective(BaseExtraGraphQLDirective):
@@ -176,7 +183,8 @@ class KebabCaseGraphQLDirective(BaseExtraGraphQLDirective):
 
 class SwapCaseGraphQLDirective(BaseExtraGraphQLDirective):
     """
-    Return a copy of the string with uppercase characters converted to lowercase and vice versa.
+    Return a copy of the string with uppercase characters
+    converted to lowercase and vice versa.
     """
 
     @staticmethod
@@ -190,22 +198,27 @@ class StripGraphQLDirective(BaseExtraGraphQLDirective):
     Return a copy of the string with the leading and trailing characters removed.
     The chars argument is a string specifying the set of characters to be removed.
     If omitted or None, the chars argument defaults to removing whitespace.
-    The chars argument is not a prefix or suffix; rather, all combinations of its values are stripped.
+    The chars argument is not a prefix or suffix; rather,
+    all combinations of its values are stripped.
     """
 
     @staticmethod
     def get_args():
         return {
-            "chars": GraphQLArgument(
+            'chars': GraphQLArgument(
                 GraphQLString,
-                description="Value to specify the set of characters to be removed",
+                description='Value to specify the set of characters to be removed',
             )
         }
 
     @staticmethod
     def resolve(value, directive, root, info, **kwargs):
-        chars_argument = [arg for arg in directive.arguments if arg.name.value == "chars"]
-        chars_argument = chars_argument[0].value.value if len(chars_argument) > 0 else " "
+        chars_argument = [
+            arg for arg in directive.arguments if arg.name.value == 'chars'
+        ]
+        chars_argument = (
+            chars_argument[0].value.value if len(chars_argument) > 0 else ' '
+        )
 
         value = value if isinstance(value, six.string_types) else str(value)
         return value.strip(chars_argument)
@@ -225,28 +238,37 @@ class TitleCaseGraphQLDirective(BaseExtraGraphQLDirective):
 
 class CenterGraphQLDirective(BaseExtraGraphQLDirective):
     """
-    Return centered in a string of length width. Padding is done using the specified fillchar
+    Return centered in a string of length width.
+    Padding is done using the specified fillchar
     The original string is returned if width is less than or equal to len(s).
     """
 
     @staticmethod
     def get_args():
         return {
-            "width": GraphQLArgument(
-                GraphQLNonNull(GraphQLInt), description="Value to returned str lenght"
+            'width': GraphQLArgument(
+                GraphQLNonNull(GraphQLInt), description='Value to returned str lenght'
             ),
-            "fillchar": GraphQLArgument(
-                GraphQLString, description="Value to fill the returned str"
+            'fillchar': GraphQLArgument(
+                GraphQLString, description='Value to fill the returned str'
             ),
         }
 
     @staticmethod
     def resolve(value, directive, root, info, **kwargs):
-        width_argument = [arg for arg in directive.arguments if arg.name.value == "width"]
-        width_argument = width_argument[0].value.value if len(width_argument) > 0 else len(value)
+        width_argument = [
+            arg for arg in directive.arguments if arg.name.value == 'width'
+        ]
+        width_argument = (
+            width_argument[0].value.value if len(width_argument) > 0 else len(value)
+        )
 
-        fillchar_argument = [arg for arg in directive.arguments if arg.name.value == "fillchar"]
-        fillchar_argument = fillchar_argument[0].value.value if len(fillchar_argument) > 0 else " "
+        fillchar_argument = [
+            arg for arg in directive.arguments if arg.name.value == 'fillchar'
+        ]
+        fillchar_argument = (
+            fillchar_argument[0].value.value if len(fillchar_argument) > 0 else ' '
+        )
 
         value = value if isinstance(value, six.string_types) else str(value)
         return value.center(int(width_argument), fillchar_argument)
@@ -255,33 +277,40 @@ class CenterGraphQLDirective(BaseExtraGraphQLDirective):
 class ReplaceGraphQLDirective(BaseExtraGraphQLDirective):
     """
     Return a copy of the string with all occurrences of substring old replaced by new.
-    If the optional argument count is given, only the first count occurrences are replaced.
+    If the optional argument count is given,
+    only the first count occurrences are replaced.
     """
 
     @staticmethod
     def get_args():
         return {
-            "old": GraphQLArgument(
+            'old': GraphQLArgument(
                 GraphQLNonNull(GraphQLString),
-                description="Value of old character to replace",
+                description='Value of old character to replace',
             ),
-            "new": GraphQLArgument(
+            'new': GraphQLArgument(
                 GraphQLNonNull(GraphQLString),
-                description="Value of new character to replace",
+                description='Value of new character to replace',
             ),
-            "count": GraphQLArgument(GraphQLInt, description="Value to returned str lenght"),
+            'count': GraphQLArgument(
+                GraphQLInt, description='Value to returned str lenght'
+            ),
         }
 
     @staticmethod
     def resolve(value, directive, root, info, **kwargs):
-        old_argument = [arg for arg in directive.arguments if arg.name.value == "old"]
+        old_argument = [arg for arg in directive.arguments if arg.name.value == 'old']
         old_argument = old_argument[0].value.value if len(old_argument) > 0 else None
 
-        new_argument = [arg for arg in directive.arguments if arg.name.value == "new"]
+        new_argument = [arg for arg in directive.arguments if arg.name.value == 'new']
         new_argument = new_argument[0].value.value if len(new_argument) > 0 else None
 
-        count_argument = [arg for arg in directive.arguments if arg.name.value == "count"]
-        count_argument = count_argument[0].value.value if len(count_argument) > 0 else -1
+        count_argument = [
+            arg for arg in directive.arguments if arg.name.value == 'count'
+        ]
+        count_argument = (
+            count_argument[0].value.value if len(count_argument) > 0 else -1
+        )
 
         value = value if isinstance(value, six.string_types) else str(value)
         return value.replace(old_argument, new_argument, int(count_argument))

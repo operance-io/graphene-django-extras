@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import hashlib
 
 from django.core.cache import caches
@@ -26,17 +25,16 @@ from .utils import clean_dict
 class ExtraGraphQLView(GraphQLView, APIView):
     def get_operation_ast(self, request):
         data = self.parse_body(request)
-        query = request.GET.get("query") or data.get("query")
+        query = request.GET.get('query') or data.get('query')
 
         if not query:
             return None
 
-        source = Source(query, name="GraphQL request")
+        source = Source(query, name='GraphQL request')
 
         document_ast = parse(source)
-        operation_ast = get_operation_ast(document_ast, None)
+        return get_operation_ast(document_ast, None)
 
-        return operation_ast
 
     @staticmethod
     def fetch_cache_key(request):
@@ -47,22 +45,21 @@ class ExtraGraphQLView(GraphQLView, APIView):
         return m.hexdigest()
 
     def super_call(self, request, *args, **kwargs):
-        response = super(ExtraGraphQLView, self).dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
-        return response
 
     def dispatch(self, request, *args, **kwargs):
         """Fetches queried data from graphql and returns cached & hashed key."""
         if not graphql_api_settings.CACHE_ACTIVE:
             return self.super_call(request, *args, **kwargs)
 
-        cache = caches["default"]
+        cache = caches['default']
         operation_ast = self.get_operation_ast(request)
-        if operation_ast and operation_ast.operation == "mutation":
+        if operation_ast and operation_ast.operation == 'mutation':
             cache.clear()
             return self.super_call(request, *args, **kwargs)
 
-        cache_key = "_graplql_{}".format(self.fetch_cache_key(request))
+        cache_key = f'_graplql_{self.fetch_cache_key(request)}'
         response = cache.get(cache_key)
 
         if not response:
@@ -76,7 +73,7 @@ class ExtraGraphQLView(GraphQLView, APIView):
     def execute(self, *args, **kwargs):
         operation_ast = get_operation_ast(args[0])
 
-        if operation_ast and operation_ast.operation == "subscription":
+        if operation_ast and operation_ast.operation == 'subscription':
             result = subscribe(self.schema, *args, **kwargs)
             if isinstance(result, Observable):
                 a = []
@@ -89,7 +86,7 @@ class ExtraGraphQLView(GraphQLView, APIView):
 
     @classmethod
     def as_view(cls, *args, **kwargs):
-        view = super(ExtraGraphQLView, cls).as_view(*args, **kwargs)
+        view = super().as_view(*args, **kwargs)
         view = csrf_exempt(view)
         return view
 
@@ -105,22 +102,23 @@ class ExtraGraphQLView(GraphQLView, APIView):
             response = {}
 
             if execution_result.errors:
-                response["errors"] = [self.format_error(e) for e in execution_result.errors]
+                response['errors'] = [
+                    self.format_error(e) for e in execution_result.errors
+                ]
 
             if execution_result.invalid:
                 status_code = 400
             else:
-                response["data"] = execution_result.data
+                response['data'] = execution_result.data
 
             if self.batch:
-                response["id"] = id
-                response["status"] = status_code
+                response['id'] = id
+                response['status'] = status_code
 
             if graphql_api_settings.CLEAN_RESPONSE and not query.startswith(
-                "\n  query IntrospectionQuery"
-            ):
-                if response.get("data", None):
-                    response["data"] = clean_dict(response["data"])
+                '\n  query IntrospectionQuery'
+            ) and response.get('data'):
+                response['data'] = clean_dict(response['data'])
 
             result = self.response_json_encode(request, response, pretty=show_graphiql)
         else:
@@ -141,15 +139,15 @@ class AuthenticatedGraphQLView(ExtraGraphQLView):
     def parse_body(self, request):
         if isinstance(request, Request):
             return request.data
-        return super(AuthenticatedGraphQLView, self).parse_body(request)
+        return super().parse_body(request)
 
     @classmethod
     def as_view(cls, *args, **kwargs):
-        view = super(AuthenticatedGraphQLView, cls).as_view(*args, **kwargs)
+        view = super().as_view(*args, **kwargs)
         view = permission_classes((IsAuthenticated,))(view)
         view = authentication_classes(api_settings.DEFAULT_AUTHENTICATION_CLASSES)(view)
         view = throttle_classes(api_settings.DEFAULT_THROTTLE_CLASSES)(view)
-        view = api_view(["GET", "POST"])(view)
+        view = api_view(['GET', 'POST'])(view)
         view = csrf_exempt(view)
 
         return view

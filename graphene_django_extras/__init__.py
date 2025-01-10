@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from graphene.pyutils.version import get_version
 
 from .directives import all_directives
@@ -18,29 +17,29 @@ from .types import (
     DjangoSerializerType,
 )
 
-VERSION = (0, 4, 9, "final", "")
+VERSION = (0, 4, 9, 'final', '')
 
 __version__ = get_version(VERSION)
 
 __all__ = (
-    "__version__",
+    'DjangoFilterListField',
+    'DjangoFilterPaginateListField',
+    'DjangoInputObjectType',
+    'DjangoListObjectField',
+    'DjangoListObjectType',
     # FIELDS
-    "DjangoObjectField",
-    "DjangoFilterListField",
-    "DjangoFilterPaginateListField",
-    "DjangoListObjectField",
-    # MUTATIONS
-    "DjangoSerializerMutation",
-    # PAGINATION
-    "LimitOffsetGraphqlPagination",
-    "PageGraphqlPagination",
+    'DjangoObjectField',
     # 'CursorGraphqlPagination',  # Not implemented yet
     # TYPES
-    "DjangoObjectType",
-    "DjangoListObjectType",
-    "DjangoInputObjectType",
-    "DjangoSerializerType",
+    'DjangoObjectType',
+    # MUTATIONS
+    'DjangoSerializerMutation',
+    'DjangoSerializerType',
+    'ExtraGraphQLDirectiveMiddleware',
+    # PAGINATION
+    'LimitOffsetGraphqlPagination',
+    'PageGraphqlPagination',
+    '__version__',
     # DIRECTIVES
-    "all_directives",
-    "ExtraGraphQLDirectiveMiddleware",
+    'all_directives',
 )

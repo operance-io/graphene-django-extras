@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 from functools import partial
 
 import graphene
 from django.db import DatabaseError
 
-from ..base_types import DjangoListObjectBase
+from ..base_types import DjangoListObjectBase  # noqa: TID252
 
 
 class GenericPaginationField(graphene.Field):
@@ -13,20 +12,21 @@ class GenericPaginationField(graphene.Field):
     """
 
     def __init__(self, _type, paginator_instance, *args, **kwargs):
-        kwargs.setdefault("args", {})
+        kwargs.setdefault('args', {})
 
         self.paginator_instance = paginator_instance
 
         kwargs.update(self.paginator_instance.to_graphql_fields())
         kwargs.update(
             {
-                "description": "{} list, paginated by {}".format(
-                    _type._meta.model.__name__, paginator_instance.__name__
+                'description': (
+                    f'{_type._meta.model.__name__} list, '
+                    'paginated by {paginator_instance.__name__}'
                 )
             }
         )
 
-        super(GenericPaginationField, self).__init__(graphene.List(_type), *args, **kwargs)
+        super().__init__(graphene.List(_type), *args, **kwargs)
 
     @property
     def model(self):
@@ -38,7 +38,9 @@ class GenericPaginationField(graphene.Field):
         return None
 
     def wrap_resolve(self, parent_resolver):
-        return partial(self.list_resolver, self.type.of_type._meta.model._default_manager)
+        return partial(
+            self.list_resolver, self.type.of_type._meta.model._default_manager
+        )
 
 
 def _positive_int(integer_string, strict=False, cutoff=None):
@@ -50,7 +52,7 @@ def _positive_int(integer_string, strict=False, cutoff=None):
     else:
         return integer_string
     if ret < 0 or (ret == 0 and strict):
-        raise ValueError()
+        raise ValueError
     if cutoff:
         return min(ret, cutoff)
     return ret
@@ -65,7 +67,7 @@ def _nonzero_int(integer_string, strict=False, cutoff=None):
     else:
         return integer_string
     if ret == 0 and strict:
-        raise ValueError()
+        raise ValueError
     if cutoff:
         return min(ret, cutoff)
     return ret

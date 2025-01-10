@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from graphql.type.directives import specified_directives as default_directives
 
 from .date import DateGraphQLDirective

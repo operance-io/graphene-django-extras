@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 import math
 
 from graphql import GraphQLString
 
 from .base import BaseExtraGraphQLDirective
 
-__all__ = ("FloorGraphQLDirective", "CeilGraphQLDirective")
+__all__ = ('CeilGraphQLDirective', 'FloorGraphQLDirective')
 
 
 class FloorGraphQLDirective(BaseExtraGraphQLDirective):

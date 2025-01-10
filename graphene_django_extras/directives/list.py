@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 import random
 
 from graphql import GraphQLArgument, GraphQLInt, GraphQLNonNull
 
 from .base import BaseExtraGraphQLDirective
 
-__all__ = ("ShuffleGraphQLDirective", "SampleGraphQLDirective")
+__all__ = ('SampleGraphQLDirective', 'ShuffleGraphQLDirective')
 
 
 class ShuffleGraphQLDirective(BaseExtraGraphQLDirective):
@@ -24,10 +23,14 @@ class ShuffleGraphQLDirective(BaseExtraGraphQLDirective):
 class SampleGraphQLDirective(BaseExtraGraphQLDirective):
     @staticmethod
     def get_args():
-        return {"k": GraphQLArgument(GraphQLNonNull(GraphQLInt), description="Value to default to")}
+        return {
+            'k': GraphQLArgument(
+                GraphQLNonNull(GraphQLInt), description='Value to default to'
+            )
+        }
 
     @staticmethod
     def resolve(value, directive, root, info, **kwargs):
-        k_argument = [arg for arg in directive.arguments if arg.name.value == "k"][0]
+        k_argument = next(arg for arg in directive.arguments if arg.name.value == 'k')
         k = int(k_argument.value.value)
         return random.sample(value, k) if value else value
