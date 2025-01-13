@@ -4,17 +4,29 @@ from rest_framework.settings import APISettings
 
 DEFAULTS = {
     # Pagination
-    'DEFAULT_PAGINATION_CLASS': None,  # graphene_django_extras.paginations.LimitOffsetGraphqlPagination
+    'DEFAULT_PAGINATION_CLASS': None,  # 'graphene_django_extras.paginations.LimitOffsetGraphqlPagination'
     'DEFAULT_PAGE_SIZE': None,
     'MAX_PAGE_SIZE': None,
     'CLEAN_RESPONSE': False,
     'CACHE_ACTIVE': False,
     'CACHE_TIMEOUT': 300,  # seconds (default 5 min)
+    'DJANGO_OBJECT_FIELD_RESOLVER': None,
+    'DJANGO_LIST_FIELD_RESOLVER': None,
+    'DJANGO_FILTER_LIST_FIELD_RESOLVER': None,
+    'DJANGO_FILTER_PAGINATE_LIST_FIELD_RESOLVER': None,
+    'DJANGO_LIST_OBJECT_FIELD_RESOLVER': None,
 }
 
 
 # List of settings that may be in string import notation.
-IMPORT_STRINGS = ('DEFAULT_PAGINATION_CLASS',)
+IMPORT_STRINGS = (
+    'DEFAULT_PAGINATION_CLASS',
+    'DJANGO_OBJECT_FIELD_RESOLVER',
+    'DJANGO_LIST_FIELD_RESOLVER',
+    'DJANGO_FILTER_LIST_FIELD_RESOLVER',
+    'DJANGO_FILTER_PAGINATE_LIST_FIELD_RESOLVER',
+    'DJANGO_LIST_OBJECT_FIELD_RESOLVER',
+)
 
 
 class GraphQLAPISettings(APISettings):

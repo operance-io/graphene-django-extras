@@ -2,12 +2,12 @@ from math import fabs
 
 from graphene import Int, NonNull, String
 
-from src.lib.graphql.graphene_django_extras.paginations.utils import (
+from graphene_django_extras.paginations.utils import (
     GenericPaginationField,
     _get_count,
     _nonzero_int,
 )
-from src.lib.graphql.graphene_django_extras.settings import graphql_api_settings
+from graphene_django_extras.settings import graphql_api_settings
 
 __all__ = (
     'CursorGraphqlPagination',
